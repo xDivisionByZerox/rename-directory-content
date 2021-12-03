@@ -1,6 +1,6 @@
 {
   "name": "rename-directory-content",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rename all files in a directory based on the directory name",
   "main": "dist/main.js",
   "scripts": {

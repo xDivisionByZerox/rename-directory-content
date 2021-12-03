@@ -1,5 +1,5 @@
 # rename-directory-content
-Rename all files in a directory based on the directory name
+Rename all files in a directory based on the directory name. Build in NodeJS (because I can).
 
 # Installation
 
@@ -25,4 +25,20 @@ Run the script.
   npm run start [directory-you-want-to-rename]
 ```
 
-The script will rename all files in this directory based on the directory name.
+Example:
+```bash
+  npm run start C:/photos/highlights
+```
+
+The script will rename all files in this directory based on the directory name. In this example all files in the directory `C:/photos/highlights` will be renamed to `highlights_[index].[file-extension]`.
+
+# Add a custom rename base name
+
+If you don't want to rename all files in a directory based on the directory name you can provide a custom name by adding the `--name "your-custom-name"` to the CLI. Please not that if you run the script via the `npm run start` script you need to pass an extra `--` before your argument for this to work.
+
+Example:
+```bash
+  npm run start -- C:/photos/highlights --name picture
+```
+
+This will rename all files in the directory `C:/photos/highlights` to `picture_[index].[file-extension]`.

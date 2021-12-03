@@ -1,9 +1,50 @@
 import { readdirSync, renameSync, statSync } from 'fs';
 import { extname, isAbsolute, join, normalize } from 'path';
 
-async function renameDirectory(directory: string) {
+interface IArgs {
+  directory: string;
+  name?: string;
+}
+
+function getArgs(): IArgs {
+  const [_nodeBin, _cwd, ...args] = process.argv;
+  const nameIndex = args.indexOf('--name');
+  let name: undefined | string = undefined;
+  if (nameIndex > -1) {
+    name = args[nameIndex + 1];
+    args.splice(nameIndex, 2);
+  }
+
+  if (name !== undefined) {
+    // remove invalid file name characters for windows
+    // based on https://gist.github.com/doctaphred/d01d05291546186941e1b7ddc02034d3
+    name = name.replace(/"|'|<|>|:|\/|\\|\||\?|\*/g, '');
+  }
+
+  const errorText = [
+    'Please provide an absolute directory that you want to rename as CLI argument.',
+    'Example:',
+    'npm run start "C:/users/my-user-name/pictures/cats"'
+  ].join('\n');
+  // only argument left in array should be directory argument
+  const directory = args.pop();
+  if (typeof directory !== 'string') {
+    throw new Error(errorText);
+  }
+
+  if (!isAbsolute(directory)) {
+    throw new Error(errorText);
+  }
+
+  return { directory, name };
+}
+
+async function renameDirectory(directory: string, renameBaseName?: string) {
   directory = directory.replace(/(\/\/|\\\\)/g, '/');
-  const directoryName = getLastPartOfPath(directory);
+  if (renameBaseName === undefined) {
+    renameBaseName = getLastPartOfPath(directory);
+  }
+
   const fileNames = readdirSync(directory);
   const indexLength = fileNames.length.toString().length;
 
@@ -17,7 +58,7 @@ async function renameDirectory(directory: string) {
 
       const index = renamed.toString().padStart(indexLength, '0');
       const extension = extname(fileName);
-      const newPath = getFullFilePath(directory, `${directoryName}_${index + extension}`);
+      const newPath = getFullFilePath(directory, `${renameBaseName}_${index + extension}`);
 
       renameSync(oldPath, newPath);
       renamed++;
@@ -44,26 +85,12 @@ function getLastPartOfPath(path: string): string {
 }
 
 (async () => {
-  const directory = process.argv[2];
-
-  const errorText = [
-    'Please provide an absolute directory that you want to rename as CLI argument.',
-    'Example:',
-    'npm run start "C:/users/my-user-name/pictures/cats"'
-  ].join('\n');
-  if (typeof directory !== 'string') {
-    throw new Error(errorText);
-  }
-
-  if (!isAbsolute(directory)) {
-    throw new Error(errorText);
-  }
-
-  await renameDirectory(directory);
+  const { directory, name } = getArgs();
+  await renameDirectory(directory, name);
 })().catch((error) => {
-  if(error instanceof Error) {
+  if (error instanceof Error) {
     process.stdout.write(error.message);
-  } else if (typeof error === 'string') {    
+  } else if (typeof error === 'string') {
     process.stdout.write(error);
   } else {
     console.log(error);
